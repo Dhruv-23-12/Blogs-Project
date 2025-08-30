@@ -1,11 +1,7 @@
 import React from 'react'
-import {Editor } from '@tinymce/tinymce-react';
 import {Controller } from 'react-hook-form';
 
 export default function RTE({name, control, label, defaultValue =""}) {
-  // Use the actual TinyMCE API key
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY || "je9oufrbg3odeme6bzerun0ksbb0iyvhm0s60u6k088wf5b3";
-  
   return (
     <div className='w-full'> 
     {label && <label className='inline-block mb-1 pl-1'>{label}</label>}
@@ -13,32 +9,12 @@ export default function RTE({name, control, label, defaultValue =""}) {
     <Controller
     name={name || "content"}
     control={control}
-    render={({field: {onChange}}) => (
-        <Editor
-        apiKey={apiKey}
-        initialValue={defaultValue}
-        init={{
-            height: 500,
-            menubar: true,
-            plugins: [
-                "advlist", "autolink", "lists", "link", "image", "charmap", "preview",
-                "anchor", "searchreplace", "visualblocks", "code", "fullscreen",
-                "insertdatetime", "media", "table", "help", "wordcount"
-            ],
-            toolbar: "undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
-            content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-            branding: false,
-            promotion: false,
-            // Disable network requests that cause errors
-            referrer_policy: "origin",
-            // Use local storage instead of cloud features
-            cloud_channel: "",
-            // Disable automatic updates
-            auto_update: false,
-            // Disable telemetry
-            telemetry: false
-        }}
-        onEditorChange={onChange}
+    render={({field: {onChange, value}}) => (
+        <textarea
+        value={value || defaultValue}
+        onChange={onChange}
+        className="w-full h-64 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+        placeholder="Write your content here..."
         />
     )}
     />
