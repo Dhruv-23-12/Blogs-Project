@@ -104,55 +104,87 @@ export default function PostForm({ post }) {
     }, [watch, slugTransform, setValue]);
 
     return (
-        <form onSubmit={handleSubmit(submit)} className="flex flex-wrap">
-            <div className="w-2/3 px-2">
-                <Input
-                    label="Title :"
-                    placeholder="Title"
-                    className="mb-4"
-                    {...register("title", { required: true })}
-                />
-                <Input
-                    label="Slug :"
-                    placeholder="Slug"
-                    className="mb-4"
-                    {...register("slug", { required: true })}
-                    onInput={(e) => {
-                        setValue("slug", slugTransform(e.currentTarget.value), { shouldValidate: true });
-                    }}
-                />
-                <RTE label="Content :" name="content" control={control} defaultValue={getValues("content")} />
-                <div className="text-sm text-neutral-500 mt-2">
-                    ⚠️ Note: Content is limited to 255 characters due to database constraints. Longer content will be automatically truncated.
-                </div>
-            </div>
-            <div className="w-1/3 px-2">
-                <Input
-                    label="Featured Image :"
-                    type="file"
-                    className="mb-4"
-                    accept="image/png, image/jpg, image/jpeg, image/gif"
-                    {...register("image", { required: !post })}
-                />
-                {post && (
-                    <div className="w-full mb-4">
-                        <img
-                            src={appwriteService.getFilePreview(post.FeatureImage)}
-                            alt={post.tiitle}
-                            className="rounded-lg"
+        <div className="w-full max-w-6xl mx-auto">
+            <form onSubmit={handleSubmit(submit)} className="space-y-6">
+                {/* Main Content Section */}
+                <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-soft border border-neutral-100">
+                    <h2 className="text-xl sm:text-2xl font-bold text-neutral-800 mb-6">Post Content</h2>
+                    
+                    <div className="space-y-4">
+                        <Input
+                            label="Title :"
+                            placeholder="Enter your post title"
+                            className="mb-4"
+                            {...register("title", { required: true })}
                         />
+                        <Input
+                            label="Slug :"
+                            placeholder="Post URL slug"
+                            className="mb-4"
+                            {...register("slug", { required: true })}
+                            onInput={(e) => {
+                                setValue("slug", slugTransform(e.currentTarget.value), { shouldValidate: true });
+                            }}
+                        />
+                        <RTE label="Content :" name="content" control={control} defaultValue={getValues("content")} />
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                            <div className="flex items-start">
+                                <svg className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                <p className="text-sm text-yellow-800">
+                                    <strong>Note:</strong> Content is limited to 255 characters due to database constraints. Longer content will be automatically truncated.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                )}
-                <Select
-                    options={["active", "inactive"]}
-                    label="Status"
-                    className="mb-4"
-                    {...register("status", { required: true })}
-                />
-                <Button type="submit" bgColor={post ? "bg-green-500" : undefined} className="w-full">
-                    {post ? "Update" : "Submit"}
-                </Button>
-            </div>
-        </form>
+                </div>
+
+                {/* Sidebar Section */}
+                <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-soft border border-neutral-100">
+                    <h2 className="text-xl sm:text-2xl font-bold text-neutral-800 mb-6">Post Settings</h2>
+                    
+                    <div className="space-y-6">
+                        <div>
+                            <Input
+                                label="Featured Image :"
+                                type="file"
+                                className="mb-4"
+                                accept="image/png, image/jpg, image/jpeg, image/gif"
+                                {...register("image", { required: !post })}
+                            />
+                            {post && (
+                                <div className="w-full mb-4">
+                                    <img
+                                        src={appwriteService.getFilePreview(post.FeatureImage)}
+                                        alt={post.tiitle}
+                                        className="rounded-lg w-full h-48 object-cover"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div>
+                            <Select
+                                options={["active", "inactive"]}
+                                label="Status"
+                                className="mb-4"
+                                {...register("status", { required: true })}
+                            />
+                        </div>
+                        
+                        <div className="pt-4">
+                            <Button 
+                                type="submit" 
+                                bgColor={post ? "bg-green-500" : undefined} 
+                                className="w-full py-3 text-base font-medium"
+                            >
+                                {post ? "Update Post" : "Create Post"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
     );
 }

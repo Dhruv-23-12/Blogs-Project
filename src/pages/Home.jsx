@@ -55,18 +55,18 @@ function Home() {
     }
     
     return (
-        <div className='w-full py-16 bg-gradient-to-br from-white to-primary-50'>
+        <div className='w-full py-8 sm:py-16 bg-gradient-to-br from-white to-primary-50'>
             <Container>
-                <div className='text-center mb-16'>
-                    <h1 className='text-5xl font-bold text-neutral-800 mb-6'>
+                <div className='text-center mb-8 sm:mb-16'>
+                    <h1 className='text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mb-4 sm:mb-6'>
                         Latest Stories
                     </h1>
-                    <p className='text-xl text-neutral-600 max-w-2xl mx-auto leading-relaxed'>
+                    <p className='text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto leading-relaxed px-4'>
                         Discover the latest insights, stories, and perspectives from our community of writers.
                     </p>
                 </div>
                 
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8'>
                     {posts.map((post) => {
                         console.log('Home - Rendering post:', post)
                         return (
