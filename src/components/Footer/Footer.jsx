@@ -157,16 +157,6 @@ function Footer() {
             <ul className="space-y-3">
               <li>
                 <a 
-                  href="https://github.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-neutral-300 hover:text-primary-400 transition-colors duration-300 text-sm"
-                >
-                  Source Code
-                </a>
-              </li>
-              <li>
-                <a 
                   href="mailto:support@megablog.com" 
                   className="text-neutral-300 hover:text-primary-400 transition-colors duration-300 text-sm"
                 >
@@ -190,8 +180,6 @@ function Footer() {
             </p>
             <div className="flex items-center space-x-4 text-sm text-neutral-400">
               <span>Built with React & Appwrite</span>
-              <span>•</span>
-              <span>Powered by Vercel</span>
             </div>
           </div>
         </div>
