@@ -179,7 +179,7 @@ function Footer() {
               &copy; 2025 MegaBlog. All rights reserved.
             </p>
             <div className="flex items-center space-x-4 text-sm text-neutral-400">
-              <span>Built with React & Appwrite</span>
+              <span>Built with React & Firebase</span>
             </div>
           </div>
         </div>

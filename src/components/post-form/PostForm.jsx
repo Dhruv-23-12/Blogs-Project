@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, RTE, Select } from "..";
-import appwriteService from "../../appwrite/config";
+import firebaseService from "../../firebase/service";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -21,13 +21,13 @@ export default function PostForm({ post }) {
     const submit = async (data) => {
         try {
             if (post) {
-                const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null;
+                const file = data.image[0] ? await firebaseService.uploadFile(data.image[0]) : null;
 
                 if (file) {
-                    appwriteService.deleteFile(post.FeatureImage);
+                    firebaseService.deleteFile(post.FeatureImage);
                 }
 
-                const dbPost = await appwriteService.updatePost(post.$id, {
+                const dbPost = await firebaseService.updatePost(post.$id, {
                     ...data,
                     featuredImage: file ? file.$id : undefined,
                 });
@@ -39,18 +39,53 @@ export default function PostForm({ post }) {
                 // Ensure we have all required data
                 if (!data.title || !data.slug || !data.content || !userData?.$id) {
                     console.error("Missing required data:", { title: data.title, slug: data.slug, content: data.content, userId: userData?.$id });
-                    alert("Please fill in all required fields");
+                    alert("Please fill in all required fields (title, slug, and content)");
                     return;
                 }
 
-                const file = await appwriteService.uploadFile(data.image[0]);
+                // Ensure slug is not empty after transformation
+                let transformedSlug = slugTransform(data.slug);
+                if (!transformedSlug) {
+                    alert("Please provide a valid slug for your post.");
+                    return;
+                }
+
+                console.log("Original slug:", data.slug);
+                console.log("Transformed slug:", transformedSlug);
+
+                // Test Firebase configuration first
+                console.log("Testing Firebase configuration...");
+                await firebaseService.testCollectionConfig();
+                
+                // Test document creation
+                console.log("Testing document creation...");
+                await firebaseService.testDocumentCreation();
+
+                // Check if slug already exists (for SEO purposes)
+                const slugExists = await firebaseService.checkSlugExists(transformedSlug);
+                console.log("Slug exists check result:", slugExists);
+                if (slugExists) {
+                    // Try to make the slug unique by adding a timestamp
+                    const uniqueSlug = `${transformedSlug}-${Date.now()}`;
+                    console.log("Slug exists, using unique slug:", uniqueSlug);
+                    transformedSlug = uniqueSlug;
+                }
+
+                const file = await firebaseService.uploadFile(data.image[0]);
 
                 if (file) {
-                    const fileId = file.$id;
+                    // File is now converted to base64 and stored in Firestore
+                    const imageData = file.$url || file;
                     
                     // Debug: Check userData and userId
                     console.log("Debug - userData:", userData);
                     console.log("Debug - userData.$id:", userData?.$id);
+                    console.log("Debug - Image size:", file.size, "bytes");
+                    
+                    // Warn about large images (base64 increases size by ~33%)
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
+                        alert("Warning: Large image detected. For better performance, consider using images under 5MB.");
+                    }
                     
                     if (!userData?.$id) {
                         alert("User not authenticated. Please login again.");
@@ -59,15 +94,15 @@ export default function PostForm({ post }) {
                     
                     const postData = {
                         title: data.title.trim(),
-                        slug: data.slug.trim(),
+                        slug: transformedSlug,
                         content: data.content,
-                        featuredImage: fileId,
+                        featuredImage: imageData,
                         status: data.status || "active",
                         userId: userData.$id
                     };
 
                     console.log("Submitting post data:", postData);
-                    const dbPost = await appwriteService.createPost(postData);
+                    const dbPost = await firebaseService.createPost(postData);
 
                     if (dbPost) {
                         navigate(`/post/${dbPost.$id}`);
@@ -78,7 +113,17 @@ export default function PostForm({ post }) {
             }
         } catch (error) {
             console.error("Error submitting post:", error);
-            alert("Failed to create post. Please check the console for details.");
+            
+            // Provide more specific error messages
+            if (error.message && error.message.includes("ID already exists")) {
+                alert("There was a temporary issue creating your post. Please try again.");
+            } else if (error.message && error.message.includes("permission")) {
+                alert("You don't have permission to create posts. Please check your authentication.");
+            } else if (error.message && error.message.includes("network")) {
+                alert("Network error. Please check your internet connection and try again.");
+            } else {
+                alert("Failed to create post. Please check the console for details.");
+            }
         }
     };
 
@@ -87,8 +132,10 @@ export default function PostForm({ post }) {
             return value
                 .trim()
                 .toLowerCase()
-                .replace(/[^a-zA-Z\d\s]+/g, "-")
-                .replace(/\s/g, "-");
+                .replace(/[^a-zA-Z0-9\s-]/g, "") // Remove special characters except hyphens
+                .replace(/\s+/g, "-") // Replace spaces with hyphens
+                .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+                .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 
         return "";
     }, []);
@@ -156,7 +203,7 @@ export default function PostForm({ post }) {
                             {post && (
                                 <div className="w-full mb-4">
                                     <img
-                                        src={appwriteService.getFilePreview(post.FeatureImage)}
+                                        src={firebaseService.getFilePreview(post.FeatureImage)}
                                         alt={post.tiitle}
                                         className="rounded-lg w-full h-48 object-cover"
                                     />

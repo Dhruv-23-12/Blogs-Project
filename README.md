@@ -1,6 +1,6 @@
 # MegaBlog - Modern Blogging Platform
 
-A beautiful, modern blogging platform built with React, Redux, and Appwrite backend. Perfect for creators who want to share their stories with the world.
+A beautiful, modern blogging platform built with React, Redux, and Firebase backend. Perfect for creators who want to share their stories with the world.
 
 ![MegaBlog Preview](https://img.shields.io/badge/MegaBlog-Modern%20Blogging-blue?style=for-the-badge&logo=react)
 
@@ -18,7 +18,7 @@ A beautiful, modern blogging platform built with React, Redux, and Appwrite back
 
 - **Frontend**: React 18, Redux Toolkit, React Router
 - **Styling**: Tailwind CSS with custom design tokens
-- **Backend**: Appwrite (Database, Authentication, Storage)
+- **Backend**: Firebase (Firestore, Authentication, Storage)
 - **Build Tool**: Vite
 - **Deployment**: Vercel ready
 
@@ -44,15 +44,11 @@ A beautiful, modern blogging platform built with React, Redux, and Appwrite back
    bun install
    ```
 
-3. **Set up environment variables**
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_APPWRITE_URL=your_appwrite_url
-   VITE_APPWRITE_PROJECT_ID=your_project_id
-   VITE_APPWRITE_DATABASE_ID=your_database_id
-   VITE_APPWRITE_COLLECTION_ID=your_collection_id
-   VITE_APPWRITE_BUCKET_ID=your_bucket_id
-   ```
+3. **Set up Firebase**
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Enable Authentication (Email/Password)
+   - Create a Firestore database
+   - Update the Firebase configuration in `src/firebase/config.js`
 
 4. **Start development server**
    ```bash
@@ -72,7 +68,7 @@ A beautiful, modern blogging platform built with React, Redux, and Appwrite back
    - Import your GitHub repository
    - Vercel will automatically detect the Vite configuration
 
-3. **Environment Variables**: Add your Appwrite environment variables in Vercel dashboard
+3. **Firebase Configuration**: Update Firebase config in `src/firebase/config.js` with your project details
 
 4. **Deploy**: Click deploy and your blog will be live!
 
@@ -88,13 +84,13 @@ npm run build
 
 ## 🔧 Configuration
 
-### Appwrite Setup
+### Firebase Setup
 
-1. Create an Appwrite project
-2. Set up authentication
-3. Create a database and collection for posts
-4. Set up storage bucket for images
-5. Update environment variables
+1. Create a Firebase project
+2. Enable Authentication (Email/Password provider)
+3. Create a Firestore database
+4. Set up security rules for Firestore
+5. Update Firebase configuration in the code
 
 ### Customization
 
@@ -124,7 +120,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - Built with [React](https://reactjs.org/)
 - Styled with [Tailwind CSS](https://tailwindcss.com/)
-- Backend powered by [Appwrite](https://appwrite.io/)
+- Backend powered by [Firebase](https://firebase.google.com/)
 - Deployed on [Vercel](https://vercel.com/)
 
 ---

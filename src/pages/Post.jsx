@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import appwriteService from "../appwrite/config";
+import firebaseService from "../firebase/service";
 import { Button, Container } from "../components";
 import parse from "html-react-parser";
 import { useSelector } from "react-redux";
@@ -14,30 +14,30 @@ export default function Post() {
 
     const userData = useSelector((state) => state.auth.userData);
 
-    const isAuthor = post && userData ? post.userId === userData.$id : false;
+    const isAuthor = post && userData ? (post.userId === userData.$id || post.UserId === userData.$id) : false;
 
     // Function to get image with fallback
     const getImageWithFallback = async (featureImage) => {
         if (!featureImage) return null;
         
         try {
-            // First try preview URL
-            const previewUrl = appwriteService.getFilePreview(featureImage);
-            console.log('Post - Trying preview URL:', previewUrl);
-            
-            // Test if preview URL works
-            const testResult = await appwriteService.testImageAccess(featureImage);
-            
-            if (testResult === true) {
-                console.log('Post - Preview URL works');
-                return previewUrl;
-            } else if (testResult === 'public') {
-                console.log('Post - Using public URL as fallback');
-                return appwriteService.getPublicFileUrl(featureImage);
-            } else {
-                console.log('Post - Both URLs failed, showing placeholder');
-                return null;
+            // For base64 images, return directly
+            if (featureImage.startsWith('data:')) {
+                console.log('Post - Using base64 image data');
+                return featureImage;
             }
+            
+            // For Firebase Storage URLs, return directly
+            if (featureImage.startsWith('http')) {
+                console.log('Post - Using Firebase Storage URL:', featureImage);
+                return featureImage;
+            }
+            
+            // Fallback to Firebase service
+            const previewUrl = firebaseService.getFilePreview(featureImage);
+            console.log('Post - Using Firebase preview URL:', previewUrl);
+            return previewUrl;
+            
         } catch (error) {
             console.error('Post - Error getting image:', error);
             return null;
@@ -46,8 +46,11 @@ export default function Post() {
 
     useEffect(() => {
         if (slug) {
-            appwriteService.getPost(slug).then((post) => {
+            firebaseService.getPost(slug).then((post) => {
                 if (post) {
+                    console.log('Post - Received post data:', post);
+                    console.log('Post - Content field:', post.Content);
+                    console.log('Post - Content type:', typeof post.Content);
                     setPost(post);
                     // Get image with fallback
                     if (post.FeatureImage) {
@@ -65,9 +68,9 @@ export default function Post() {
     }, [slug, navigate]);
 
     const deletePost = () => {
-        appwriteService.deletePost(post.$id).then((status) => {
+        firebaseService.deletePost(post.$id).then((status) => {
             if (status) {
-                appwriteService.deleteFile(post.FeatureImage);
+                firebaseService.deleteFile(post.FeatureImage);
                 navigate("/");
             }
         });
@@ -81,6 +84,19 @@ export default function Post() {
     return post ? (
         <div className="py-8">
             <Container>
+                {/* Back Button */}
+                <div className="mb-6">
+                    <Link 
+                        to="/all-posts" 
+                        className="inline-flex items-center px-4 py-2 text-primary-600 hover:text-primary-700 font-medium transition-colors duration-300"
+                    >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to All Posts
+                    </Link>
+                </div>
+
                 <div className="w-full flex justify-center mb-4 relative border rounded-xl p-2 bg-gradient-to-br from-primary-50 to-accent-50">
                     {imageUrl && !imageError ? (
                         <img
@@ -100,7 +116,7 @@ export default function Post() {
                                 </p>
                                 {imageError && (
                                     <p className="text-xs text-neutral-500 mt-1">
-                                        Check Appwrite settings
+                                        Image loading failed
                                     </p>
                                 )}
                             </div>
@@ -109,7 +125,7 @@ export default function Post() {
 
                     {isAuthor && (
                         <div className="absolute right-6 top-6">
-                            <Link to={`/edit-post/${post.$id}`}>
+                            <Link to={`/edit-post/${post.slug}`}>
                                 <Button bgColor="bg-green-500" className="mr-3">
                                     Edit
                                 </Button>
@@ -124,7 +140,7 @@ export default function Post() {
                     <h1 className="text-2xl font-bold">{post.tiitle}</h1>
                 </div>
                 <div className="browser-css">
-                    {parse(post.Content)}
+                    {post.Content ? parse(post.Content) : <p>No content available</p>}
                 </div>
             </Container>
         </div>

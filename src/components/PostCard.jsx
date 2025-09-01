@@ -1,35 +1,32 @@
 import React from 'react'
-import appwriteService from "../appwrite/config"
+import firebaseService from "../firebase/service"
 import {Link} from 'react-router-dom'
 
-function PostCard({$id, tiitle, FeatureImage, UserId}) {
+function PostCard({$id, tiitle, FeatureImage, UserId, title, featuredImage, userId, slug}) {
     
+  // Handle both old and new data structures
+  const postTitle = tiitle || title || "Untitled Post";
+  const postImage = FeatureImage || featuredImage || "";
+  const postUserId = UserId || userId || "";
+  const postSlug = slug || "";
+  
   // Function to get image source with fallback
   const getImageSource = () => {
-    console.log('PostCard - FeatureImage:', FeatureImage)
-    console.log('PostCard - tiitle:', tiitle)
+    console.log('PostCard - FeatureImage:', postImage)
+    console.log('PostCard - tiitle:', postTitle)
     console.log('PostCard - $id:', $id)
+    console.log('PostCard - slug:', postSlug)
     
-    if (FeatureImage) {
+    if (postImage) {
+      // For Firebase Storage, the image is already a URL
+      if (postImage.startsWith('http')) {
+        return postImage;
+      }
+      
+      // Fallback to Firebase service
       try {
-        const imageUrl = appwriteService.getFilePreview(FeatureImage)
+        const imageUrl = firebaseService.getFilePreview(postImage)
         console.log('PostCard - Generated image URL:', imageUrl)
-        
-        // Test image access
-        appwriteService.testImageAccess(FeatureImage).then(result => {
-          if (result === false) {
-            console.warn('PostCard - Image may not be accessible:', imageUrl)
-          } else if (result === 'public') {
-            console.log('PostCard - Using public URL instead of preview URL')
-            // Update the image source to use public URL
-            const publicUrl = appwriteService.getPublicFileUrl(FeatureImage)
-            const imgElement = document.querySelector(`img[src="${imageUrl}"]`)
-            if (imgElement) {
-              imgElement.src = publicUrl
-            }
-          }
-        })
-        
         return imageUrl
       } catch (error) {
         console.error('Error getting image preview:', error)
@@ -46,7 +43,11 @@ function PostCard({$id, tiitle, FeatureImage, UserId}) {
   const hasImage = getImageSource()
     
   return (
-    <Link to={`/post/${$id}`} className="group">
+    <Link 
+      to={`/post/${postSlug}`} 
+      className="group"
+      onClick={() => console.log('PostCard clicked - navigating to:', `/post/${postSlug}`)}
+    >
       <div className='w-full bg-white rounded-2xl p-4 sm:p-6 shadow-soft hover:shadow-large transition-all duration-300 transform hover:-translate-y-1 border border-neutral-100 hover:border-primary-200'>
         <div className='w-full mb-4 sm:mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-primary-50 to-accent-50 border border-neutral-200'>
           {hasImage ? (
@@ -74,7 +75,7 @@ function PostCard({$id, tiitle, FeatureImage, UserId}) {
           </div>
         </div>
         <h2 className='text-lg sm:text-xl font-semibold text-neutral-800 group-hover:text-primary-700 transition-colors duration-300 leading-tight mb-3'>
-          {tiitle || 'Untitled Post'}
+          {postTitle}
         </h2>
         <div className='mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-neutral-500'>
           <span className='inline-flex items-center'>
@@ -83,9 +84,9 @@ function PostCard({$id, tiitle, FeatureImage, UserId}) {
             </svg>
             Read more
           </span>
-          {UserId && (
+          {postUserId && (
             <Link 
-              to={`/user/${UserId}`} 
+              to={`/user/${postUserId}`} 
               className='inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors duration-300 text-sm'
               onClick={(e) => e.stopPropagation()}
             >

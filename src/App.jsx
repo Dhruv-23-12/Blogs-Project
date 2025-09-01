@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import './App.css'
-import authService from "./appwrite/auth"
+import authService from "./firebase/auth"
 import {login, logout} from "./store/authSlice"
 import { Footer, Header } from './components'
 import { Outlet } from 'react-router-dom'
@@ -11,21 +11,19 @@ function App() {
   const dispatch = useDispatch()
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const userData = await authService.getCurrentUser()
+    const initAuth = () => {
+      // Use Firebase's auth state listener
+      const unsubscribe = authService.onAuthStateChange((userData) => {
         if (userData) {
           dispatch(login({userData}))
         } else {
           dispatch(logout())
         }
-      } catch (error) {
-        console.log("Auth initialization error:", error)
-        // If there's an error, assume user is not authenticated
-        dispatch(logout())
-      } finally {
         setLoading(false)
-      }
+      })
+
+      // Cleanup subscription on unmount
+      return unsubscribe
     }
 
     initAuth()

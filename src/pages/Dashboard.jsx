@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Container, PostCard } from '../components'
-import appwriteService from '../appwrite/config'
+import firebaseService from '../firebase/service'
 import { useSelector } from 'react-redux'
 
 function Dashboard() {
@@ -27,20 +27,41 @@ function Dashboard() {
         try {
             setLoading(true)
             // Get all posts and filter by current user
-            const posts = await appwriteService.getPosts([])
-            if (posts && posts.documents) {
-                const currentUserPosts = posts.documents.filter(post => post.UserId === userData?.$id)
+            const posts = await firebaseService.getPosts()
+            console.log('Dashboard - All posts:', posts)
+            console.log('Dashboard - Current user ID:', userData?.$id)
+            
+            if (posts && posts.length > 0) {
+                // Handle both old and new field names for compatibility
+                const currentUserPosts = posts.filter(post => 
+                    (post.userId === userData?.$id) || (post.UserId === userData?.$id)
+                )
+                console.log('Dashboard - Current user posts:', currentUserPosts)
                 setUserPosts(currentUserPosts)
                 
                 // Calculate user statistics
                 const stats = {
                     totalPosts: currentUserPosts.length,
-                    publishedPosts: currentUserPosts.filter(post => post.Status === 'active').length,
-                    draftPosts: currentUserPosts.filter(post => post.Status === 'draft').length,
-                    totalViews: currentUserPosts.reduce((sum, post) => sum + (post.views || 0), 0),
+                    publishedPosts: currentUserPosts.filter(post => 
+                        (post.status === 'active') || (post.Status === 'active')
+                    ).length,
+                    draftPosts: currentUserPosts.filter(post => 
+                        (post.status === 'draft') || (post.Status === 'draft')
+                    ).length,
+                    totalViews: currentUserPosts.reduce((sum, post) => sum + (post.views || post.Views || 0), 0),
                     recentPosts: currentUserPosts.slice(0, 3) // Get 3 most recent posts
                 }
                 setUserStats(stats)
+            } else {
+                console.log('Dashboard - No posts found')
+                setUserPosts([])
+                setUserStats({
+                    totalPosts: 0,
+                    publishedPosts: 0,
+                    draftPosts: 0,
+                    totalViews: 0,
+                    recentPosts: []
+                })
             }
         } catch (error) {
             console.error('Error fetching user data:', error)

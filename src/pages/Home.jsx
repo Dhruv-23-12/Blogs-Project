@@ -1,15 +1,15 @@
 import React, {useEffect, useState} from 'react'
-import appwriteService from "../appwrite/config";
+import firebaseService from "../firebase/service";
 import {Container, PostCard} from '../components'
 
 function Home() {
     const [posts, setPosts] = useState([])
 
     useEffect(() => {
-        appwriteService.getPosts().then((posts) => {
+        firebaseService.getPosts().then((posts) => {
             if (posts) {
-                console.log('Home - All posts data:', posts.documents)
-                setPosts(posts.documents)
+                console.log('Home - All posts data:', posts)
+                setPosts(posts)
             }
         })
     }, [])

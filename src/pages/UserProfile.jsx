@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Container, PostCard } from '../components'
-import appwriteService from '../appwrite/config'
+import firebaseService from '../firebase/service'
 import { useSelector } from 'react-redux'
 
 function UserProfile() {
@@ -27,9 +27,9 @@ function UserProfile() {
         try {
             setLoading(true)
             // Get all posts and filter by user
-            const posts = await appwriteService.getPosts([])
-            if (posts && posts.documents) {
-                const userSpecificPosts = posts.documents.filter(post => post.UserId === userId)
+            const posts = await firebaseService.getPosts()
+            if (posts) {
+                const userSpecificPosts = posts.filter(post => post.UserId === userId)
                 setUserPosts(userSpecificPosts)
                 
                 // Calculate user statistics
