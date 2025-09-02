@@ -1,41 +1,55 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Button, Input, Logo } from "./index"
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Button, Input, Logo } from "../index"
 import { useForm } from "react-hook-form"
-import authService from "../firebase/auth"
+import authService from "../../firebase/auth"
 
-function ForgotPassword() {
+function ResetPassword() {
     const { register, handleSubmit, formState: { errors } } = useForm()
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [searchParams] = useSearchParams()
+    const navigate = useNavigate()
+    const [oobCode, setOobCode] = useState("")
+
+    useEffect(() => {
+        const code = searchParams.get('oobCode')
+        const mode = searchParams.get('mode')
+        const apiKey = searchParams.get('apiKey')
+        const continueUrl = searchParams.get('continueUrl')
+        
+        console.log("🔍 ResetPassword - URL search params:", Object.fromEntries(searchParams.entries()))
+        console.log("🔍 ResetPassword - oobCode:", code)
+        console.log("🔍 ResetPassword - mode:", mode)
+        console.log("🔍 ResetPassword - apiKey:", apiKey)
+        console.log("🔍 ResetPassword - continueUrl:", continueUrl)
+        
+        if (code && mode === 'resetPassword') {
+            setOobCode(code)
+            setError("") // Clear any previous errors
+        } else if (code) {
+            // Handle case where oobCode exists but mode is missing
+            setOobCode(code)
+            setError("") // Clear any previous errors
+        } else {
+            setError("Invalid or missing reset code. Please request a new password reset.")
+        }
+    }, [searchParams])
 
     const onSubmit = async (data) => {
+        if (!oobCode) {
+            setError("Invalid reset code")
+            return
+        }
+
         setError("")
         setLoading(true)
         try {
-            console.log("🔍 Attempting to send password reset email to:", data.email)
-            console.log("🔍 Auth service:", authService)
-            
-            const result = await authService.sendPasswordResetEmail(data.email)
-            console.log("✅ Password reset email result:", result)
+            await authService.confirmPasswordReset(oobCode, data.password)
             setSuccess(true)
         } catch (error) {
-            console.error("❌ Password reset error:", error)
-            console.error("❌ Error code:", error.code)
-            console.error("❌ Error message:", error.message)
-            
-            // Provide more user-friendly error messages
-            let errorMessage = error.message
-            if (error.code === 'auth/user-not-found') {
-                errorMessage = "No account found with this email address."
-            } else if (error.code === 'auth/invalid-email') {
-                errorMessage = "Please enter a valid email address."
-            } else if (error.code === 'auth/too-many-requests') {
-                errorMessage = "Too many requests. Please try again later."
-            }
-            
-            setError(errorMessage)
+            setError(error.message)
         } finally {
             setLoading(false)
         }
@@ -50,10 +64,10 @@ function ForgotPassword() {
                             <Logo width="100%" />
                         </div>
                         <h2 className='text-3xl font-bold text-neutral-800'>
-                            Check your email
+                            Password reset successful!
                         </h2>
                         <p className='mt-2 text-sm text-neutral-600'>
-                            We've sent you a password reset link
+                            Your password has been updated
                         </p>
                     </div>
                     
@@ -66,38 +80,24 @@ function ForgotPassword() {
                             </div>
                             <div>
                                 <h3 className='text-lg font-semibold text-neutral-800 mb-2'>
-                                    Email sent successfully!
+                                    All set!
                                 </h3>
                                 <p className='text-sm text-neutral-600'>
-                                    Please check your email inbox and click the reset link to create a new password.
+                                    Your password has been successfully updated. You can now sign in with your new password.
                                 </p>
-                                <div className='mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-                                    <p className='text-xs text-blue-700'>
-                                        <strong>💡 Tip:</strong> If you don't see the email, please check your spam/junk folder. 
-                                        Add our emails to your contacts to prevent future emails from going to spam.
-                                    </p>
-                                </div>
                             </div>
-                            <div className='space-y-3'>
-                                <Link
-                                    to="/login"
-                                    className="block w-full"
+                            <Link
+                                to="/login"
+                                className="block w-full"
+                            >
+                                <Button
+                                    type="button"
+                                    className="w-full"
+                                    size="lg"
                                 >
-                                    <Button
-                                        type="button"
-                                        className="w-full"
-                                        size="lg"
-                                    >
-                                        Back to Login
-                                    </Button>
-                                </Link>
-                                <button
-                                    onClick={() => setSuccess(false)}
-                                    className="text-sm text-primary-600 hover:text-primary-700 transition-colors duration-300"
-                                >
-                                    Try a different email
-                                </button>
-                            </div>
+                                    Sign in to your account
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -113,10 +113,10 @@ function ForgotPassword() {
                         <Logo width="100%" />
                     </div>
                     <h2 className='text-3xl font-bold text-neutral-800'>
-                        Forgot your password?
+                        Create new password
                     </h2>
                     <p className='mt-2 text-sm text-neutral-600'>
-                        No worries, we'll send you reset instructions
+                        Enter your new password below
                     </p>
                 </div>
                 
@@ -134,29 +134,40 @@ function ForgotPassword() {
                     
                     <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                         <Input
-                            label="Email address"
-                            placeholder="Enter your email"
-                            type="email"
-                            error={errors.email?.message}
-                            {...register("email", {
-                                required: "Email is required",
-                                pattern: {
-                                    value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-                                    message: "Please enter a valid email address"
+                            label="New password"
+                            type="password"
+                            placeholder="Enter your new password"
+                            error={errors.password?.message}
+                            {...register("password", {
+                                required: "Password is required",
+                                minLength: {
+                                    value: 6,
+                                    message: "Password must be at least 6 characters"
                                 }
+                            })}
+                        />
+                        <Input
+                            label="Confirm new password"
+                            type="password"
+                            placeholder="Confirm your new password"
+                            error={errors.confirmPassword?.message}
+                            {...register("confirmPassword", {
+                                required: "Please confirm your password",
+                                validate: (value, { password }) => 
+                                    value === password || "Passwords do not match"
                             })}
                         />
                         <Button
                             type="submit"
                             className="w-full"
                             size="lg"
-                            disabled={loading}
+                            disabled={loading || !oobCode}
                         >
-                            {loading ? "Sending..." : "Send reset link"}
+                            {loading ? "Updating..." : "Update password"}
                         </Button>
                     </form>
                     
-                    <div className='mt-6 text-center space-y-3'>
+                    <div className='mt-6 text-center'>
                         <p className='text-sm text-neutral-600'>
                             Remember your password?{' '}
                             <Link
@@ -166,15 +177,6 @@ function ForgotPassword() {
                                 Sign in here
                             </Link>
                         </p>
-                        <p className='text-sm text-neutral-600'>
-                            Don't have an account?{' '}
-                            <Link
-                                to="/signup"
-                                className="font-medium text-primary-600 hover:text-primary-700 transition-colors duration-300"
-                            >
-                                Sign up here
-                            </Link>
-                        </p>
                     </div>
                 </div>
             </div>
@@ -182,4 +184,4 @@ function ForgotPassword() {
     )
 }
 
-export default ForgotPassword
+export default ResetPassword

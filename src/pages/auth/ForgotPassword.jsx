@@ -1,5 +1,5 @@
 import React from 'react'
-import { ForgotPassword as ForgotPasswordComponent } from '../components'
+import { ForgotPassword as ForgotPasswordComponent } from '../../components'
 
 function ForgotPassword() {
   return (

@@ -1,24 +1,24 @@
 import React, {useState} from 'react'
-import authService from '../firebase/auth'
-import {Link ,useNavigate} from 'react-router-dom'
-import {login} from '../store/authSlice'
-import {Button, Input, Logo} from './index.js'
-import {useDispatch} from 'react-redux'
-import {useForm} from 'react-hook-form'
+import {Link, useNavigate} from 'react-router-dom'
+import { login as authLogin } from '../../store/authSlice'
+import {Button, Input, Logo} from "../index"
+import {useDispatch} from "react-redux"
+import authService from "../../firebase/auth"
+import {useForm} from "react-hook-form"
 
-function Signup() {
+function Login() {
     const navigate = useNavigate()
-    const [error, setError] = useState("")
     const dispatch = useDispatch()
     const {register, handleSubmit, formState: { errors }} = useForm()
+    const [error, setError] = useState("")
 
-    const create = async(data) => {
+    const login = async(data) => {
         setError("")
         try {
-            const userData = await authService.createAccount(data)
-            if (userData) {
+            const session = await authService.login(data)
+            if (session) {
                 const userData = await authService.getCurrentUser()
-                if(userData) dispatch(login(userData));
+                if(userData) dispatch(authLogin(userData));
                 navigate("/")
             }
         } catch (error) {
@@ -34,10 +34,10 @@ function Signup() {
                     <Logo width="100%" />
                 </div>
                 <h2 className='text-3xl font-bold text-neutral-800'>
-                    Create your account
+                    Welcome back
                 </h2>
                 <p className='mt-2 text-sm text-neutral-600'>
-                    Join our community and start sharing your stories
+                    Sign in to your account to continue
                 </p>
             </div>
             
@@ -53,15 +53,7 @@ function Signup() {
                     </div>
                 )}
                 
-                <form onSubmit={handleSubmit(create)} className='space-y-6'>
-                    <Input
-                        label="Full Name"
-                        placeholder="Enter your full name"
-                        error={errors.name?.message}
-                        {...register("name", {
-                            required: "Full name is required",
-                        })}
-                    />
+                <form onSubmit={handleSubmit(login)} className='space-y-6'>
                     <Input
                         label="Email address"
                         placeholder="Enter your email"
@@ -75,36 +67,42 @@ function Signup() {
                             }
                         })}
                     />
-                    <Input
-                        label="Password"
-                        type="password"
-                        placeholder="Create a strong password"
-                        error={errors.password?.message}
-                        {...register("password", {
-                            required: "Password is required",
-                            minLength: {
-                                value: 8,
-                                message: "Password must be at least 8 characters"
-                            }
-                        })}
-                    />
-                    <Button 
-                        type="submit" 
+                    <div className="space-y-2">
+                        <Input
+                            label="Password"
+                            type="password"
+                            placeholder="Enter your password"
+                            error={errors.password?.message}
+                            {...register("password", {
+                                required: "Password is required",
+                            })}
+                        />
+                        <div className="text-right">
+                            <Link
+                                to="/forgot-password"
+                                className="text-sm text-primary-600 hover:text-primary-700 transition-colors duration-300"
+                            >
+                                Forgot your password?
+                            </Link>
+                        </div>
+                    </div>
+                    <Button
+                        type="submit"
                         className="w-full"
                         size="lg"
                     >
-                        Create Account
+                        Sign in
                     </Button>
                 </form>
                 
                 <div className='mt-6 text-center'>
                     <p className='text-sm text-neutral-600'>
-                        Already have an account?{' '}
+                        Don't have an account?{' '}
                         <Link
-                            to="/login"
+                            to="/signup"
                             className="font-medium text-primary-600 hover:text-primary-700 transition-colors duration-300"
                         >
-                            Sign in here
+                            Sign up here
                         </Link>
                     </p>
                 </div>
@@ -114,4 +112,4 @@ function Signup() {
   )
 }
 
-export default Signup
+export default Login

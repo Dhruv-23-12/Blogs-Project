@@ -1,24 +1,24 @@
 import React, {useState} from 'react'
-import {Link, useNavigate} from 'react-router-dom'
-import { login as authLogin } from '../store/authSlice'
-import {Button, Input, Logo} from "./index"
-import {useDispatch} from "react-redux"
-import authService from "../firebase/auth"
-import {useForm} from "react-hook-form"
+import authService from '../../firebase/auth'
+import {Link ,useNavigate} from 'react-router-dom'
+import {login} from '../../store/authSlice'
+import {Button, Input, Logo} from '../index.js'
+import {useDispatch} from 'react-redux'
+import {useForm} from 'react-hook-form'
 
-function Login() {
+function Signup() {
     const navigate = useNavigate()
+    const [error, setError] = useState("")
     const dispatch = useDispatch()
     const {register, handleSubmit, formState: { errors }} = useForm()
-    const [error, setError] = useState("")
 
-    const login = async(data) => {
+    const create = async(data) => {
         setError("")
         try {
-            const session = await authService.login(data)
-            if (session) {
+            const userData = await authService.createAccount(data)
+            if (userData) {
                 const userData = await authService.getCurrentUser()
-                if(userData) dispatch(authLogin(userData));
+                if(userData) dispatch(login(userData));
                 navigate("/")
             }
         } catch (error) {
@@ -34,10 +34,10 @@ function Login() {
                     <Logo width="100%" />
                 </div>
                 <h2 className='text-3xl font-bold text-neutral-800'>
-                    Welcome back
+                    Create your account
                 </h2>
                 <p className='mt-2 text-sm text-neutral-600'>
-                    Sign in to your account to continue
+                    Join our community and start sharing your stories
                 </p>
             </div>
             
@@ -53,7 +53,15 @@ function Login() {
                     </div>
                 )}
                 
-                <form onSubmit={handleSubmit(login)} className='space-y-6'>
+                <form onSubmit={handleSubmit(create)} className='space-y-6'>
+                    <Input
+                        label="Full Name"
+                        placeholder="Enter your full name"
+                        error={errors.name?.message}
+                        {...register("name", {
+                            required: "Full name is required",
+                        })}
+                    />
                     <Input
                         label="Email address"
                         placeholder="Enter your email"
@@ -67,42 +75,36 @@ function Login() {
                             }
                         })}
                     />
-                    <div className="space-y-2">
-                        <Input
-                            label="Password"
-                            type="password"
-                            placeholder="Enter your password"
-                            error={errors.password?.message}
-                            {...register("password", {
-                                required: "Password is required",
-                            })}
-                        />
-                        <div className="text-right">
-                            <Link
-                                to="/forgot-password"
-                                className="text-sm text-primary-600 hover:text-primary-700 transition-colors duration-300"
-                            >
-                                Forgot your password?
-                            </Link>
-                        </div>
-                    </div>
-                    <Button
-                        type="submit"
+                    <Input
+                        label="Password"
+                        type="password"
+                        placeholder="Create a strong password"
+                        error={errors.password?.message}
+                        {...register("password", {
+                            required: "Password is required",
+                            minLength: {
+                                value: 8,
+                                message: "Password must be at least 8 characters"
+                            }
+                        })}
+                    />
+                    <Button 
+                        type="submit" 
                         className="w-full"
                         size="lg"
                     >
-                        Sign in
+                        Create Account
                     </Button>
                 </form>
                 
                 <div className='mt-6 text-center'>
                     <p className='text-sm text-neutral-600'>
-                        Don't have an account?{' '}
+                        Already have an account?{' '}
                         <Link
-                            to="/signup"
+                            to="/login"
                             className="font-medium text-primary-600 hover:text-primary-700 transition-colors duration-300"
                         >
-                            Sign up here
+                            Sign in here
                         </Link>
                     </p>
                 </div>
@@ -112,4 +114,4 @@ function Login() {
   )
 }
 
-export default Login
+export default Signup

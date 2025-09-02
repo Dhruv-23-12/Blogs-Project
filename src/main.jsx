@@ -7,20 +7,17 @@ import { Provider } from 'react-redux'
 import store from './store/store.js'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import Home from './pages/Home.jsx'
-import { AuthLayout, Login } from './components/index.js'
+import { AuthLayout } from './components/index.js'
 
+// Import auth pages from auth folder
+import { Login, Signup, ForgotPassword, ResetPassword } from './pages/auth'
 
 import AddPost from "./pages/AddPost";
-import Signup from './pages/Signup'
 import EditPost from "./pages/EditPost";
-
 import Post from "./pages/Post";
-
 import AllPosts from "./pages/AllPosts";
 import Dashboard from "./pages/Dashboard";
 import UserProfile from "./pages/UserProfile";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 
 const router = createBrowserRouter([
   {
