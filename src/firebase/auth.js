@@ -3,7 +3,9 @@ import {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    updateProfile
+    updateProfile,
+    sendPasswordResetEmail,
+    confirmPasswordReset
 } from "firebase/auth";
 import { auth } from "./config";
 
@@ -99,6 +101,59 @@ export class FirebaseAuthService {
         } catch (error) {
             console.log("❌ Firebase logout error:", error);
             return false;
+        }
+    }
+
+    // Send password reset email
+    async sendPasswordResetEmail(email, actionCodeSettings = null) {
+        try {
+            console.log("🔍 Firebase Auth Service - Sending password reset email to:", email);
+            console.log("🔍 Firebase Auth instance:", auth);
+            console.log("🔍 Firebase Auth current user:", auth.currentUser);
+            
+            // Default action code settings for custom URL
+            const defaultActionCodeSettings = {
+                url: `${window.location.origin}/reset-password`,
+                handleCodeInApp: true,
+            };
+            
+            // For production, use the correct domain
+            if (window.location.hostname !== 'localhost') {
+                defaultActionCodeSettings.url = 'https://dhruvblogs.vercel.app/reset-password';
+            }
+            
+            const settings = actionCodeSettings || defaultActionCodeSettings;
+            console.log("🔍 Action code settings:", settings);
+            
+            await sendPasswordResetEmail(auth, email, settings);
+            
+            console.log("✅ Password reset email sent successfully");
+            return true;
+            
+        } catch (error) {
+            console.log("❌ Firebase sendPasswordResetEmail error:", error);
+            console.log("❌ Error details:", {
+                code: error.code,
+                message: error.message,
+                stack: error.stack
+            });
+            throw error;
+        }
+    }
+
+    // Confirm password reset with code
+    async confirmPasswordReset(code, newPassword) {
+        try {
+            console.log("Confirming password reset with code");
+            
+            await confirmPasswordReset(auth, code, newPassword);
+            
+            console.log("✅ Password reset confirmed successfully");
+            return true;
+            
+        } catch (error) {
+            console.log("❌ Firebase confirmPasswordReset error:", error);
+            throw error;
         }
     }
 

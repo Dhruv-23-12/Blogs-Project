@@ -67,15 +67,25 @@ function Login() {
                             }
                         })}
                     />
-                    <Input
-                        label="Password"
-                        type="password"
-                        placeholder="Enter your password"
-                        error={errors.password?.message}
-                        {...register("password", {
-                            required: "Password is required",
-                        })}
-                    />
+                    <div className="space-y-2">
+                        <Input
+                            label="Password"
+                            type="password"
+                            placeholder="Enter your password"
+                            error={errors.password?.message}
+                            {...register("password", {
+                                required: "Password is required",
+                            })}
+                        />
+                        <div className="text-right">
+                            <Link
+                                to="/forgot-password"
+                                className="text-sm text-primary-600 hover:text-primary-700 transition-colors duration-300"
+                            >
+                                Forgot your password?
+                            </Link>
+                        </div>
+                    </div>
                     <Button
                         type="submit"
                         className="w-full"
